@@ -166,7 +166,7 @@ def get_spec_psd_per_bin(data):
 def spectrogram(data,title):
     FFTstep = 0.5*fs_Hz  # do a new FFT every half second
     overlap = NFFT - FFTstep  # half-second steps
-    f_lim_Hz = [0, 100]   # frequency limits for plotting
+    f_lim_Hz = [0, 50]   # frequency limits for plotting
 
     plt.figure(figsize=(10,5))
     data = data - np.mean(data,0)
@@ -202,8 +202,6 @@ def plot_spectrum_avg_fft(spec_PSDperHz,freqs,title):
     spectrum_PSDperHz = np.mean(spec_PSDperHz,1)
     chan_avg = 10*np.log10(spectrum_PSDperHz)
     plt.figure(figsize=(10,5))
-    #ax = plt.subplot(1,1,1)
-    # ax.set_color_cycle(['gray', 'orange', 'gray', 'orange'])
     plt.plot(freqs, chan_avg)  # dB re: 1 uV
     plt.xlim((0,60))
     plt.ylim((-30,50))
@@ -217,10 +215,7 @@ def plot_amplitude_over_time (x, data, title):
     title = 'Trend Graph of '+config['band'][2]+' Band EEG Amplitude over Time, Channel '+str(config['channel'])+'\n'+str(config['filename'])
     plt.plot(x, data)
     plt.ylim([-10, 10])
-    # plt.xlim([t_sec[0], t_sec[-1]])
     plt.xlim(len(x)/10)
-    # if (t_lim_sec[2-1] != 0):
-    #     plt.xlim(t_lim_sec)
     plt.xlabel('Time (sec)')
     plt.ylabel('EEG Amplitude (uVrms)')
     plt.title(title)
