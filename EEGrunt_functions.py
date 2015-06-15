@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-What’s in the Box:
+What's in the Box:
 ==================
 - Import: config, pyplot, numpy, mlab, shelve, scipy utils
 - packet_check(data)
@@ -11,6 +11,10 @@ What’s in the Box:
     - Notch filter to remove 60hz mains interference + harmonics
 - bandpass(eeg_data_uV, lowcut, highcut)
     - Generic butterworth bandpass to narrow down frequency bands
+- smooth(x,window_len=11,window='hanning')
+    - Smooths things so you can tell what’s going on with a line plot
+- plotit(plt, plotname="")
+    - Saves or shows plot, depending on config
 - signalplot(data,x_values,x_label,y_label,title)
     - Make a basic signal plot
 - convertToFreqDomain(eeg_data_uV, overlap)
@@ -18,6 +22,8 @@ What’s in the Box:
 - spectrogram(data,title,fs_Hz)
     - Make pretty, pretty spectrograms!
 - spectrum_avg(spec_PSDperHz,freqs,title)
+- plot_amplitude_over_time (x, data, title)
+    - Makes a averaged, smoothed trend graph
 '''
     
 from config import *
@@ -30,6 +36,9 @@ from scipy import signal
 
 fs_Hz = config['fs_Hz']
 NFFT = config['NFFT']
+t_lim_sec = config['t_lim_sec']
+overlap  = config['NFFT'] - int(0.25 * config['fs_Hz'])
+
 
 def packet_check(data):
     data_indices = data[:, 0]
@@ -60,7 +69,69 @@ def bandpass(eeg_data_uV, lowcut, highcut):
     eeg_data_uV = signal.lfilter(b, a, eeg_data_uV, 0)
     print("Bandpass filtering to: " + str(bp_Hz[0]) + "-" + str(bp_Hz[1]) + " Hz")
     return eeg_data_uV
+    
+def smooth(x,window_len=11,window='hanning'):
+    if x.ndim != 1:
+        raise ValueError, "smooth only accepts 1 dimension arrays."
+    if x.size < window_len:
+        raise ValueError, "Input vector needs to be bigger than window size."
+    if window_len<3:
+        return x
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+    s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+    if window == 'flat': #moving average
+        w=np.ones(window_len,'d')
+    else:
+        w=eval('np.'+window+'(window_len)')
+    y=np.convolve(w/w.sum(),s,mode='valid')
+    return y
 
+def avg_samples(arr):
+    avgd_data = np.array([])
+    for i in range(len(arr)):
+        # while x < alpha_max_uVperSqrtBin[:100:5]:
+        #     print(i)
+        #     print(x)
+        #     meen = sum(arr[i-5:i]) / 5
+        #     np.append(x,avgd_data)
+        #     print avgd_data
+        if i % config['sample_block'] == 0:
+            # if abs(cutoff_uVperSqrtBin - arr[i]) < 1:
+            #     print("Too high!!!!")
+            #     print(arr[i])
+            #     arr[i] = sum(arr[(i - config['sample_block'])-1:i-1:]) / config['sample_block']
+            #     print arr[i]
+            #     print ":new"
+            meen = sum(arr[i-config['sample_block']:i]) / config['sample_block']
+            # if meen > cutoff_uVperSqrtBin:
+            #     print("meen over")  
+            #     if int(arr[i]) > int(cutoff_uVperSqrtBin):
+            #         print "item over:"
+            #         print arr[i]
+            #         print "end"
+            print(meen)
+            meen = sum(arr[i-config['sample_block']:i]) / config['sample_block']
+            avgd_data = np.append(meen, avgd_data)
+            # print(avgd_data)
+            # while num < 5:
+            #     print("while")
+            #     avgd_data = np.array([])
+            #     idx = i - num
+            #     avgd_data[num] = alpha_max_uVperSqrtBin[idx]
+            #     print(avgd_data[num-1])
+            #     num =  num + 1
+            # print("while done")
+            # alpha_max_uVperSqrtBin_avgd = []
+            # print(sum(avgd_data)/len(avgd_data))
+            # alpha_max_uVperSqrtBin_avgd[i] = sum(avgd_data)/len(avgd_data)
+    return avgd_data
+
+def plotit(plt, plotname=""):
+    if config['plot'] == 'show':
+        plt.show()
+    if config['plot'] == 'save':
+        plt.savefig('plots/EEGrunt '+plotname+'.png')
 
 def signalplot(data,x_values,x_label,y_label,title):
     plt.figure(figsize=(10,5))
@@ -90,11 +161,9 @@ def get_spec_psd_per_bin(data):
                            Fs=fs_Hz,
                            noverlap=overlap
                            ) # returns PSD power per Hz
+    spec_PSDperBin = spec_PSDperHz * fs_Hz / float(NFFT)                 
+    return spec_PSDperBin, freqs, t  #convert to "per bin"
 
-    return [spec_PSDperHz * fs_Hz / float(NFFT), freqs, t]  #convert to "per bin"
-
-
-# Create spectrogram of specific channel
 def spectrogram(data,title):
     FFTstep = 0.5*fs_Hz  # do a new FFT every half second
     overlap = NFFT - FFTstep  # half-second steps
@@ -103,10 +172,7 @@ def spectrogram(data,title):
     plt.figure(figsize=(10,5))
     data = data - np.mean(data,0)
     ax = plt.subplot(1,1,1)
-    spec_PSDperBin = get_spec_psd_per_bin(data,NFFT)
-    t = spec_PSDperBin[1]
-    freqs = spec_PSDperBin[2]
-    spec_PSDperBin =  spec_PSDperBin[0]
+    spec_PSDperBin, freqs, t = get_spec_psd_per_bin(data)
     
     plt.pcolor(t, freqs, 10*np.log10(spec_PSDperBin))  # dB re: 1 uV
     #plt.clim(20-7.5-3.0+np.array([-30, 0]))
@@ -133,7 +199,6 @@ def spectrogram(data,title):
 
     return spec_PSDperHz, freqs, t
 
-
 def spectrum_avg(spec_PSDperHz,freqs,title):
     #find spectrum slices within the time period of interest
     #ind = ((t > t_lim_sec[0]) & (t < t_lim_sec[1]))
@@ -152,4 +217,19 @@ def spectrum_avg(spec_PSDperHz,freqs,title):
     plt.ylabel('PSD per Hz (dB re: 1uV^2/Hz)')
     plt.title(title)
     # plt.show()
+    
+def plot_amplitude_over_time (x, data, title):
+    title = 'Trend Graph of EEG Amplitude over Time, Channel '+str(config['channel'])+'\n'+str(config['filename'])
+    plt.plot(x, data)
+    plt.ylim([0, 6])
+    # plt.xlim([t_sec[0], t_sec[-1]])
+    plt.xlim(len(x)/10)
+    if (t_lim_sec[2-1] != 0):
+        plt.xlim(t_lim_sec)
+    plt.xlabel('Time (sec)')
+    plt.ylabel('EEG Amplitude (uVrms)')
+    plt.title(title)
+
+    plotit(plt, 'Channel '+str(config['channel'])+' trend graph')
+
 
