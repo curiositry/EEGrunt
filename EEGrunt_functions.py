@@ -12,7 +12,7 @@ What's in the Box:
 - bandpass(eeg_data_uV, lowcut, highcut)
     - Generic butterworth bandpass to narrow down frequency bands
 - smooth(x,window_len=11,window='hanning')
-    - Smooths things so you can tell what’s going on with a line plot
+    - Smooths things so you can tell what's going on with a line plot
 - plotit(plt, plotname="")
     - Saves or shows plot, depending on config
 - signalplot(data,x_values,x_label,y_label,title)
@@ -39,12 +39,12 @@ NFFT = config['NFFT']
 t_lim_sec = config['t_lim_sec']
 overlap  = config['NFFT'] - int(0.25 * config['fs_Hz'])
 
-
 def packet_check(data):
     data_indices = data[:, 0]
     d_indices = data_indices[2:]-data_indices[1:-1]
     n_jump = np.count_nonzero((d_indices != 1) & (d_indices != -255))
-    return "Packet counter discontinuities: " + str(n_jump)              
+    print("Packet counter discontinuities: " + str(n_jump))
+    return n_jump  
 
 def remove_dc_offset(eeg_data_uV):
     hp_cutoff_Hz = 1.0
@@ -62,9 +62,9 @@ def notch_mains_interference(eeg_data_uV):
         print("Notch filter removing: " + str(bp_stop_Hz[0]) + "-" + str(bp_stop_Hz[1]) + " Hz")
         return eeg_data_uV
 
-def bandpass(eeg_data_uV, lowcut, highcut):
+def bandpass(eeg_data_uV, band):
     bp_Hz = np.zeros(0)
-    bp_Hz = np.array([lowcut, highcut])
+    bp_Hz = np.array([band[0],band[1]])
     b, a = signal.butter(3, bp_Hz/(fs_Hz / 2.0),'bandpass')
     eeg_data_uV = signal.lfilter(b, a, eeg_data_uV, 0)
     print("Bandpass filtering to: " + str(bp_Hz[0]) + "-" + str(bp_Hz[1]) + " Hz")
@@ -110,7 +110,6 @@ def avg_samples(arr):
             #         print "item over:"
             #         print arr[i]
             #         print "end"
-            print(meen)
             meen = sum(arr[i-config['sample_block']:i]) / config['sample_block']
             avgd_data = np.append(meen, avgd_data)
             # print(avgd_data)
@@ -195,41 +194,36 @@ def spectrogram(data,title):
         horizontalalignment='left',
         backgroundcolor='w')
     #plt.colorbar()
-    plt.show()
+    plotit(plt, 'Channel '+str(config['channel'])+' spectrogram')
 
-    return spec_PSDperHz, freqs, t
+    return
 
-def spectrum_avg(spec_PSDperHz,freqs,title):
-    #find spectrum slices within the time period of interest
-    #ind = ((t > t_lim_sec[0]) & (t < t_lim_sec[1]))
+def plot_spectrum_avg_fft(spec_PSDperHz,freqs,title):
     spectrum_PSDperHz = np.mean(spec_PSDperHz,1)
+    chan_avg = 10*np.log10(spectrum_PSDperHz)
     plt.figure(figsize=(10,5))
-    ax = plt.subplot(1,1,1)
-
-    ax.set_color_cycle(['m', 'c', 'm', 'c'])
-
-    ax.plot(freqs, 10*np.log10(spectrum_PSDperHz))  # dB re: 1 uV
-
-    plt.xlim(0, 50)
-    plt.ylim(-20, 20)
-
+    #ax = plt.subplot(1,1,1)
+    # ax.set_color_cycle(['gray', 'orange', 'gray', 'orange'])
+    plt.plot(freqs, chan_avg)  # dB re: 1 uV
+    plt.xlim((0,60))
+    plt.ylim((-30,50))
+    plotname = 'Channel '+str(config['channel'])+' Spectrum Average FFT Plot'
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('PSD per Hz (dB re: 1uV^2/Hz)')
-    plt.title(title)
-    # plt.show()
+    plt.title("Channel "+str(config['channel'])+" Spectrum Average FFT Plot\n"+config["filename"])
+    plotit(plt, plotname)
     
 def plot_amplitude_over_time (x, data, title):
-    title = 'Trend Graph of EEG Amplitude over Time, Channel '+str(config['channel'])+'\n'+str(config['filename'])
+    title = 'Trend Graph of '+config['band'][2]+' Band EEG Amplitude over Time, Channel '+str(config['channel'])+'\n'+str(config['filename'])
     plt.plot(x, data)
-    plt.ylim([0, 6])
+    plt.ylim([-10, 10])
     # plt.xlim([t_sec[0], t_sec[-1]])
     plt.xlim(len(x)/10)
-    if (t_lim_sec[2-1] != 0):
-        plt.xlim(t_lim_sec)
+    # if (t_lim_sec[2-1] != 0):
+    #     plt.xlim(t_lim_sec)
     plt.xlabel('Time (sec)')
     plt.ylabel('EEG Amplitude (uVrms)')
     plt.title(title)
-
     plotit(plt, 'Channel '+str(config['channel'])+' trend graph')
 
 
