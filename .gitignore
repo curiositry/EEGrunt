@@ -1,1 +1,4 @@
 old/*
+data/*
+*.pyc
+*.py~
