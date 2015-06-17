@@ -17,7 +17,7 @@ activity  = "meditation"
 data_segments = [
     {
     "start_time":0 ,
-    "end_time":1000,
+    "end_time":3600,
     "title":config['filename'],
     "type":activity
     }]
@@ -25,7 +25,7 @@ data_segments = [
 # Load up the numpy array
 raw_data = np.loadtxt(config['path'] + config['filename'],
 	          delimiter=',',
-	          skiprows=5,
+	          skiprows=2,
 	          usecols=(0,1,2,3,4,5,6,7,8)
 	          )
               
