@@ -39,7 +39,7 @@ NFFT = config['NFFT']
 t_lim_sec = config['t_lim_sec']
 overlap  = config['NFFT'] - int(0.25 * config['fs_Hz'])
 
-font = {'family' : 'Ubuntu, Helvetica, Open Sans'}
+font = {'family' : 'Source Sans Pro, Helvetica, Open Sans'}
 
 plt.rc('font', **font)
 
@@ -224,11 +224,11 @@ def plot_amplitude_over_time (x, data, title):
     plt.title(title)
     plotit(plt, 'Channel '+str(config['channel'])+' trend graph')
 
-def plot_coherence_fft(s1,s2,title, chan_a, chan_b):
+def plot_coherence_fft(s1, s2, title, chan_a, chan_b):
     plt.figure()
     plt.ylabel("Coherence")
     plt.xlabel("Frequency (Hz)")
-    plt.title("Coherence between channels "+chan_a+" and " +chan_b +" in the "+str(config['band'][0])+"-"+str(config['band'][1])+" band.")
+    plt.title("Coherence between channels "+chan_a+" and " +chan_b +" in the "+str(config['band'][0])+"-"+str(config['band'][1])+" Hz band.")
     plt.grid(True)
     plt.xlim(config['band'][0],config['band'][1])
     cxy, f = plt.cohere(s1, s2, NFFT, fs_Hz)

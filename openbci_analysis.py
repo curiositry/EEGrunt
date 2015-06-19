@@ -85,6 +85,7 @@ for segment_id in range(len(data_segments)):
     # Plot FFT
     #plot_spectrum_avg_fft(spec_PSDperHz,freqs2,title)
     
+    # Plot coherence fft
     s1 = bandpass(seginfo["data"][:,1-1], config['band'])
     s2 = bandpass(seginfo["data"][:,8-1], config['band'])
     plot_coherence_fft(s1,s2,title,"1","8")
