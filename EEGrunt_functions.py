@@ -30,14 +30,18 @@ from config import *
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
-import shelve
-from scipy.signal import butter, lfilter, freqz
+# import shelve
+# from scipy.signal import butter, lfilter, freqz
 from scipy import signal
 
 fs_Hz = config['fs_Hz']
 NFFT = config['NFFT']
 t_lim_sec = config['t_lim_sec']
 overlap  = config['NFFT'] - int(0.25 * config['fs_Hz'])
+
+font = {'family' : 'Ubuntu, Helvetica, Open Sans'}
+
+plt.rc('font', **font)
 
 def packet_check(data):
     data_indices = data[:, 0]
@@ -174,9 +178,8 @@ def spectrogram(data,title):
     spec_PSDperBin, freqs, t = get_spec_psd_per_bin(data)
     
     plt.pcolor(t, freqs, 10*np.log10(spec_PSDperBin))  # dB re: 1 uV
-    #plt.clim(20-7.5-3.0+np.array([-30, 0]))
-    plt.clim([-25,25])
-    plt.xlim(t[0], t[-1])
+    plt.clim([-25,26])
+    # plt.xlim(t[0], t[-1]+1)
 
     #plt.xlim(np.array(t_lim_sec)+np.array([-10, 10]))
     #plt.ylim([0, fs_Hz/2.0])  # show the full frequency content of the signal
@@ -221,4 +224,12 @@ def plot_amplitude_over_time (x, data, title):
     plt.title(title)
     plotit(plt, 'Channel '+str(config['channel'])+' trend graph')
 
-
+def plot_coherence_fft(s1,s2,title, chan_a, chan_b):
+    plt.figure()
+    plt.ylabel("Coherence")
+    plt.xlabel("Frequency (Hz)")
+    plt.title("Coherence between channels "+chan_a+" and " +chan_b +" in the "+str(config['band'][0])+"-"+str(config['band'][1])+" band.")
+    plt.grid(True)
+    plt.xlim(config['band'][0],config['band'][1])
+    cxy, f = plt.cohere(s1, s2, NFFT, fs_Hz)
+    plotit(plt)
