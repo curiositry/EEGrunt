@@ -217,7 +217,7 @@ def plot_spectrum_avg_fft(spec_PSDperHz,freqs,title):
 def plot_amplitude_over_time (x, data, title):
     title = 'Trend Graph of '+config['band'][2]+' Band EEG Amplitude over Time, Channel '+str(config['channel'])+'\n'+str(config['filename'])
     plt.plot(x, data)
-    plt.ylim([-10, 10])
+    plt.ylim([np.amin(data), np.amax(data)+1])
     plt.xlim(len(x)/10)
     plt.xlabel('Time (sec)')
     plt.ylabel('EEG Amplitude (uVrms)')
