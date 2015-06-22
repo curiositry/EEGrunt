@@ -17,8 +17,8 @@ if(config['filename'][(len(config['filename']) - 3):] == "csv"):
 # Add more if you want to generate plots for different section of an experiment
 data_segments = [
     {
-    "start_time":50 ,
-    "end_time":100,
+    "start_time":30,
+    "end_time":3600,
     "title":config['filename'],
     "type":activity
     }]
@@ -44,48 +44,50 @@ for segment_id in range(len(data_segments)):
 # Check packets
 packet_check(raw_data)
 
-# do stuff (like make plots) of each chunk of data
-for segment_id in range(len(data_segments)):
-    # Set data, depending if it's segmented
-    seginfo = data_segments[segment_id]
-    data = raw_data[:, channel:]
-    data = seginfo["data"][:,(channel-1)]
-    seg_t = np.arange(len(data)) / fs_Hz
+for channel in channels:
+    config['channel'] = channel
+    # do stuff (like make plots) of each chunk of data
+    for segment_id in range(len(data_segments)):
+        # Set data, depending if it's segmented
+        seginfo = data_segments[segment_id]
+        data = raw_data[:, channel:]
+        data = seginfo["data"][:,(channel-1)]
+        seg_t = np.arange(len(data)) / fs_Hz
 
-    
-    # Set default plot title
-    title = "Channel "+str(channel)+"\n"+seginfo["title"]
-    
-    # Filter data
-    unbandpassed_data = remove_dc_offset(data)
-    unbandpassed_data = notch_mains_interference(unbandpassed_data)
-    data = bandpass(unbandpassed_data, config['band'])
+        
+        # Set default plot title
+        title = "Channel "+str(channel)+"\n"+seginfo["title"]
+        
+        # Filter data
+        unbandpassed_data = remove_dc_offset(data)
+        unbandpassed_data = notch_mains_interference(unbandpassed_data)
+        data = bandpass(unbandpassed_data, config['band'])
 
-    # Make Spectrogram 
-    #spectrogram(data, title)
+        # Make Spectrogram 
+        spectrogram(unbandpassed_data, title)
 
-    # Convert things for trend graph (for trend graph)
-    spec_PSDperBin, freqs, t_spec = get_spec_psd_per_bin(data)
-    full_spec_PSDperBin, full_t_spec, freqs = convertToFreqDomain(data,  overlap)    
-    bool_inds = (freqs > config['band'][0]) & (freqs < config['band'][1])
-    band_max_uVperSqrtBin = np.sqrt(np.amax(full_spec_PSDperBin[bool_inds, :], 0))
-    avgd_data = avg_samples(band_max_uVperSqrtBin)   
-    
-    # Make trend graph     
-    #plot_amplitude_over_time(full_t_spec[::config['sample_block']], smooth(avgd_data[:len(avgd_data)-10:]), title)
-    
-    # Convert things for FFT
-    # hz_data = data - np.mean(unbandpassed_data,0)
-    spec_PSDperHz, freqs2, t2 = mlab.specgram(unbandpassed_data,
-                                NFFT=NFFT,
-                                window=mlab.window_hanning,
-                                Fs=fs_Hz,
-                                noverlap=overlap
-                               ) 
-    # Plot FFT
-    #plot_spectrum_avg_fft(spec_PSDperHz,freqs2,title)
-    
-    # Plot coherence fft
-    s1 = bandpass(seginfo["data"][:,1-1], config['band'])
-    s2 = bandpass(seginfo["data"][:,8-1], config['band'])
-    plot_coherence_fft(s1,s2,title,"1","8")
+        # Convert things for trend graph (for trend graph)
+        spec_PSDperBin, freqs, t_spec = get_spec_psd_per_bin(data)
+        full_spec_PSDperBin, full_t_spec, freqs = convertToFreqDomain(data,  overlap)    
+        bool_inds = (freqs > config['band'][0]) & (freqs < config['band'][1])
+        band_max_uVperSqrtBin = np.sqrt(np.amax(full_spec_PSDperBin[bool_inds, :], 0))
+        avgd_data = avg_samples(band_max_uVperSqrtBin)   
+        
+        # Make trend graph     
+        plot_amplitude_over_time(full_t_spec[::config['sample_block']], smooth(avgd_data[:len(avgd_data)-10:]), title)
+        
+        # Convert things for FFT
+        # hz_data = data - np.mean(unbandpassed_data,0)
+        spec_PSDperHz, freqs2, t2 = mlab.specgram(unbandpassed_data,
+                                    NFFT=NFFT,
+                                    window=mlab.window_hanning,
+                                    Fs=fs_Hz,
+                                    noverlap=overlap
+                                   ) 
+        # Plot FFT
+        plot_spectrum_avg_fft(spec_PSDperHz,freqs2,title)
+        
+        # Plot coherence fft
+        # s1 = bandpass(seginfo["data"][:,1-1], config['band'])
+        # s2 = bandpass(seginfo["data"][:,8-1], config['band'])
+        # plot_coherence_fft(s1,s2,title,"1","8")
