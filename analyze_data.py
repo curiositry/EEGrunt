@@ -3,7 +3,7 @@ from EEGrunt import *
 # You need to set this stuff!
 source = 'openbci'
 path = 'data/'
-filename = 'converted_OpenBCI-RAW-2015-04-23_08-46-58-rf-meditation2.csv'
+filename = 'EEG_data.txt'
 activity  = "SSVEP"
 
 data = load_data(path, filename, source)
