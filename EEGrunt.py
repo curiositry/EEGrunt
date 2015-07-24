@@ -34,7 +34,6 @@ def load_data(path, filename, source):
 class EEGrunt:
     def __init__(self, data, path, filename, source):
         self.raw_data = data
-        self.data = self.raw_data
         self.path = path
         self.filename = filename
         self.source = source
@@ -61,22 +60,17 @@ class EEGrunt:
         
         self.plot = 'show'
         
-        self.data_segments = [{
-            "start_time":0,
-            "end_time":60,
-            "title": "",
-            "type": "",
-        }]
-        
         self.overlap  = self.NFFT - int(0.25 * self.fs_Hz)
         self.t_sec = np.arange(len(self.raw_data[:, 0])) /self.fs_Hz
-# font = {'family' : 'Source Sans Pro, Helvetica, Open Sans'}
-# 
-# plt.rc('font', **font)
+
     
+    def load_channel(self,channel):
+        channel_data = self.raw_data[:,(channel+self.col_offset)]
+        self.channel = channel
+        self.data = channel_data
         
         
-    def packet_check():
+    def packet_check(self):
         data_indices = self.data[:, 0]
         d_indices = data_indices[2:]-data_indices[1:-1]
         n_jump = np.count_nonzero((d_indices != 1) & (d_indices != -255))
@@ -200,7 +194,7 @@ class EEGrunt:
         self.plotit(plt, 'Channel '+str(self.channel)+' trend graph')
 
 
-    def plot_coherence_fft(self, s1, s2, b chan_a, chan_b):
+    def plot_coherence_fft(self, s1, s2, chan_a, chan_b):
         plt.figure()
         plt.ylabel("Coherence")
         plt.xlabel("Frequency (Hz)")
