@@ -22,13 +22,23 @@ def load_data(path, filename, source):
         
     if source == 'openbci': 
         skiprows = 5
-        if(filename[(len(filename) - 3):] == "csv"):
-            skiprows = 2
         raw_data = np.loadtxt(path + filename,
                       delimiter=',',
                       skiprows=skiprows,
                       usecols=(0,1,2,3,4,5,6,7,8)
-                      )      
+                      )   
+                      
+            
+    if source == 'openbci-openvibe': 
+        skiprows = 2
+        raw_data = np.loadtxt(path + filename,
+                      delimiter=',',
+                      skiprows=skiprows,
+                      usecols=(0,1,2,3,4,5,6,7,8)
+                      )                   
+                      
+                      
+                         
     return raw_data
 
 class EEGrunt:
@@ -181,7 +191,7 @@ class EEGrunt:
         
     def plot_band_power(self,start_freq,end_freq,band_name):    
         print("Plotting band power over time. Frequency range: "+str(start_freq)+" - "+str(end_freq))
-        title = 'Trend Graph of '+band_name+' EEG Amplitude over Time'+self.default_plot_title
+        title = 'Trend Graph of '+band_name+' EEG Amplitude over Time '+self.default_plot_title
         bool_inds = (self.spec_freqs > start_freq) & (self.spec_freqs < end_freq)
         band_power = np.sqrt(np.amax(self.spec_PSDperBin[bool_inds, :], 0))
         plt.figure(figsize=(10,5))    
