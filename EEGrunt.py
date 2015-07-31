@@ -48,7 +48,7 @@ class EEGrunt:
         self.filename = filename
         self.source = source
         
-        if self.source == 'openbci':
+        if self.source == 'openbci' or self.source == 'openbci-openvibe':
             self.fs_Hz = 250.0
             self.NFFT = 256*2
             self.nchannels = 8
