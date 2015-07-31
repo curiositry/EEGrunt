@@ -5,45 +5,9 @@ import numpy as np
 import matplotlib.mlab as mlab
 from scipy import signal
 
-def load_data(path, filename, source):
-    
-    raw_data = []
-    
-    if source == 'muse':
-        skiprows = 0
-        with open(path + filename, 'rb') as csvfile:
-            for row in csvfile:
-                cols = row.split(',')
-                if(cols[1].strip() == "/muse/eeg"):
-                    raw_data.append(cols[2:6])
-
-        dt = np.dtype('Float64')            
-        raw_data = np.array(raw_data, dtype=dt) 
-        
-    if source == 'openbci': 
-        skiprows = 5
-        raw_data = np.loadtxt(path + filename,
-                      delimiter=',',
-                      skiprows=skiprows,
-                      usecols=(0,1,2,3,4,5,6,7,8)
-                      )   
-                      
-            
-    if source == 'openbci-openvibe': 
-        skiprows = 2
-        raw_data = np.loadtxt(path + filename,
-                      delimiter=',',
-                      skiprows=skiprows,
-                      usecols=(0,1,2,3,4,5,6,7,8)
-                      )                   
-                      
-                      
-                         
-    return raw_data
-
 class EEGrunt:
-    def __init__(self, data, path, filename, source):
-        self.raw_data = data
+    def __init__(self, path, filename, source):
+    
         self.path = path
         self.filename = filename
         self.source = source
@@ -71,10 +35,63 @@ class EEGrunt:
         self.plot = 'show'
         
         self.overlap  = self.NFFT - int(0.25 * self.fs_Hz)
+        
         self.t_sec = np.arange(len(self.raw_data[:, 0])) /self.fs_Hz
+
+
+
+    def load_data(self):
+
+        path = self.path
+        filename = self.filename
+        source = self.source
+        
+        print("Loading EEG data: "+path+filename)
+        
+        try:
+            with open(path+filename) as file:
+                pass
+        except IOError:
+            print 'EEG data file not found.'
+            exit()
+
+        if source == 'muse':
+            skiprows = 0
+            with open(path + filename, 'rb') as csvfile:
+                for row in csvfile:
+                    cols = row.split(',')
+                    if(cols[1].strip() == "/muse/eeg"):
+                        raw_data.append(cols[2:6])
+
+            dt = np.dtype('Float64')
+            raw_data = np.array(raw_data, dtype=dt)
+
+        if source == 'openbci':
+            skiprows = 5
+            raw_data = np.loadtxt(path + filename,
+                          delimiter=',',
+                          skiprows=skiprows,
+                          usecols=(0,1,2,3,4,5,6,7,8)
+                          )
+
+
+        if source == 'openbci-openvibe':
+            skiprows = 2
+            raw_data = np.loadtxt(path + filename,
+                          delimiter=',',
+                          skiprows=skiprows,
+                          usecols=(0,1,2,3,4,5,6,7,8)
+                          )
+
+
+
+        self.raw_data = raw_data
+
+
 
     
     def load_channel(self,channel):
+        print("Loading channel: "+str(channel))
         channel_data = self.raw_data[:,(channel+self.col_offset)]
         self.channel = channel
         self.data = channel_data

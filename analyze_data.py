@@ -1,14 +1,35 @@
-from EEGrunt import *
+import EEGrunt
 
-# You need to set this stuff!
+# Required settings #
+
+# Data source. Options:
+# 'openbci' for data recorded with OBCI GUI;
+# 'openbci-openvibe' for OBCI data recorded with OpenViBE's csv writer
+# 'muse' for data from Muse headset
 source = 'openbci'
+
+# Path to EEG data file
 path = 'data/'
+
+# EEG data file name
 filename = 'EEG_data.csv'
+
+# Activity label (used in some plots and such)
 activity  = "SSVEP"
 
-data = load_data(path, filename, source)
+# Initialize
+EEG = EEGrunt(path, filename, source)
 
-EEG = EEGrunt(data, path, filename, source)
+
+# Here we can set some additional properties
+# The 'plot' property determines whether plots are displayed or saved.
+# Possible values are 'show' and 'save'
+EEG.plot = 'show'
+
+
+# Load the EEG data
+EEG.load_data()
+
 
 for channel in EEG.channels:
     
@@ -21,7 +42,7 @@ for channel in EEG.channels:
     # Removes OpenBCI DC offset
     EEG.remove_dc_offset()
     
-    # Notches 60hz noise (of you're in Europe, switch to 50Hz)
+    # Notches 60hz noise (if you're in Europe, switch to 50Hz)
     EEG.notch_mains_interference()
 
     # Crunches spectrum data and stores as EEGrunt attribute(s) for reuse
@@ -34,11 +55,11 @@ for channel in EEG.channels:
     # Make Spectrogram 
     EEG.spectrogram()
 
-    # Line graph of amplitude over time for a give frequency. range
+    # Line graph of amplitude over time for a given frequency range.
+    # Arguments are start frequency, end frequency, and label
     EEG.plot_band_power(8,12,"Alpha")
     
-    # Standard FFT plot
-    # (average power over the course of session for a given frequency)
+    # Power spectrum
     EEG.plot_spectrum_avg_fft()
         
     # Plot coherence fft (not tested recently...)
