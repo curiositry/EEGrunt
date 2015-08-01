@@ -1,6 +1,6 @@
 import EEGrunt
 
-# Required settings #
+# Required settings 
 
 # Data source. Options:
 # 'openbci' for data recorded with OBCI GUI;
@@ -12,13 +12,14 @@ source = 'openbci'
 path = 'data/'
 
 # EEG data file name
-filename = 'EEG_data.csv'
+filename = 'OpenBCI-RAW-2015-04-23_08-46-58-rf-meditation2.txt'
+#filename = 'EEG_data.csv'
 
 # Activity label (used in some plots and such)
-activity  = "SSVEP"
+activity  = "Meditation"
 
 # Initialize
-EEG = EEGrunt(path, filename, source)
+EEG = EEGrunt.EEGrunt(path, filename, source)
 
 
 # Here we can set some additional properties

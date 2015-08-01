@@ -17,9 +17,7 @@ class EEGrunt:
             self.NFFT = 256*2
             self.nchannels = 8
             self.channels = [1,2,3,4,5,6,7,8]
-            self.col_offset = -1
-            if(filename[(len(filename) - 3):] == "csv"):
-                self.col_offset = 0
+            self.col_offset = 0
 
         
         if self.source == 'muse':
@@ -36,7 +34,6 @@ class EEGrunt:
         
         self.overlap  = self.NFFT - int(0.25 * self.fs_Hz)
         
-        self.t_sec = np.arange(len(self.raw_data[:, 0])) /self.fs_Hz
 
 
 
@@ -76,7 +73,7 @@ class EEGrunt:
 
 
         if source == 'openbci-openvibe':
-            skiprows = 2
+            skiprows = 1
             raw_data = np.loadtxt(path + filename,
                           delimiter=',',
                           skiprows=skiprows,
@@ -86,7 +83,8 @@ class EEGrunt:
 
 
         self.raw_data = raw_data
-
+        
+        self.t_sec = np.arange(len(self.raw_data[:, 0])) /self.fs_Hz
 
 
     
@@ -137,7 +135,7 @@ class EEGrunt:
         if window_len<3:
             return x
         if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-            raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+            raise ValueError, "Window is one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
         s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
         if window == 'flat': #moving average
             w=np.ones(window_len,'d')
@@ -162,6 +160,7 @@ class EEGrunt:
         self.plotit(plt)
         
     def get_spectrum_data(self):
+        print("Calculating spectrum data...")
         self.spec_PSDperHz, self.spec_freqs, self.spec_t = mlab.specgram(np.squeeze(self.data),
                                        NFFT=self.NFFT,
                                        window=mlab.window_hanning,
@@ -173,11 +172,14 @@ class EEGrunt:
     
 
     def spectrogram(self):
+        print("Generating spectrogram...")
         f_lim_Hz = [0, 50]   # frequency limits for plotting
         plt.figure(figsize=(10,5))
         # data = data - np.mean(data,0)
-        ax = plt.subplot(1,1,1)    
+        ax = plt.subplot(1,1,1)
+        print("1")    
         plt.pcolor(self.spec_t, self.spec_freqs, 10*np.log10(self.spec_PSDperBin))  # dB re: 1 uV
+        print("2")
         plt.clim([-25,26])
         plt.xlim(self.spec_t[0], self.spec_t[-1]+1)
         plt.ylim(f_lim_Hz)
@@ -193,7 +195,10 @@ class EEGrunt:
             backgroundcolor='w')
         self.plotit(plt, 'Channel '+str(self.channel)+' spectrogram')
 
-    def plot_spectrum_avg_fft(self):        
+    def plot_spectrum_avg_fft(self):  
+        
+        print("Generating power spectrum plot")
+              
         spectrum_PSDperHz = np.mean(self.spec_PSDperHz,1)
         plt.figure(figsize=(10,5))
         plt.plot(self.spec_freqs, 10*np.log10(spectrum_PSDperHz))  # dB re: 1 uV
