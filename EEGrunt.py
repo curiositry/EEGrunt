@@ -6,11 +6,15 @@ import matplotlib.mlab as mlab
 from scipy import signal
 
 class EEGrunt:
-    def __init__(self, path, filename, source):
+    def __init__(self, path, filename, source, title = ""):
     
         self.path = path
         self.filename = filename
         self.source = source
+        if(title):
+            self.session_title = title
+        else:
+            self.session_title = source.title()+" data loaded from "+filename
         
         if self.source == 'openbci' or self.source == 'openbci-openvibe':
             self.fs_Hz = 250.0
@@ -93,7 +97,7 @@ class EEGrunt:
         channel_data = self.raw_data[:,(channel+self.col_offset)]
         self.channel = channel
         self.data = channel_data
-        
+
         
     def packet_check(self):
         data_indices = self.data[:, 0]
@@ -144,12 +148,14 @@ class EEGrunt:
         y=np.convolve(w/w.sum(),s,mode='valid')
         return y
 
-    def plotit(self,plt, plotname=""):
+    def plotit(self,plt, filename=""):
         if self.plot == 'show':
             plt.show()
+            plt.close()
         if self.plot == 'save':
-            plt.savefig('plots/EEGrunt_'+plotname+'.png')
-
+            plt.savefig(filename)
+            plt.close()
+        
     def signalplot(self,x_values,x_label,y_label,title):
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
@@ -175,17 +181,14 @@ class EEGrunt:
         print("Generating spectrogram...")
         f_lim_Hz = [0, 50]   # frequency limits for plotting
         plt.figure(figsize=(10,5))
-        # data = data - np.mean(data,0)
         ax = plt.subplot(1,1,1)
-        print("1")    
         plt.pcolor(self.spec_t, self.spec_freqs, 10*np.log10(self.spec_PSDperBin))  # dB re: 1 uV
-        print("2")
         plt.clim([-25,26])
         plt.xlim(self.spec_t[0], self.spec_t[-1]+1)
         plt.ylim(f_lim_Hz)
         plt.xlabel('Time (sec)')
         plt.ylabel('Frequency (Hz)')
-        plt.title("Spectrogram of "+self.default_plot_title)
+        plt.title(self.plot_title('Spectrogram'))
         # add annotation for FFT Parameters
         ax.text(0.025, 0.95,
             "NFFT = " + str(self.NFFT) + "\nfs = " + str(int(self.fs_Hz)) + " Hz",
@@ -193,7 +196,17 @@ class EEGrunt:
             verticalalignment='top',
             horizontalalignment='left',
             backgroundcolor='w')
-        self.plotit(plt, 'Channel '+str(self.channel)+' spectrogram')
+        self.plotit(plt, self.plot_filename('Spectrogram'))
+
+    def plot_title(self,title = ""):
+        return 'Channel '+str(self.channel)+' '+title+'\n'+self.session_title
+        
+    def plot_filename(self,title = ""):
+        fn = self.session_title+' Channel '+str(self.channel)+' '+title
+        valid_chars = '-_.() abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        filename = 'plots/'+(''.join(c for c in fn if c in valid_chars)).replace(' ','_')+'.png'
+        return filename
+        
 
     def plot_spectrum_avg_fft(self):  
         
@@ -207,13 +220,13 @@ class EEGrunt:
         plotname = 'Channel '+str(self.channel)+' Spectrum Average FFT Plot'
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('PSD per Hz (dB re: 1uV^2/Hz)')
-        plt.title("Channel "+str(self.filename)+" Spectrum Average FFT Plot\n"+self.filename)
-        self.plotit(plt, plotname)
+        
+        plt.title(self.plot_title("Power Spectrum"))
+        self.plotit(plt, self.plot_filename("Power Spectrum"))
         
         
     def plot_band_power(self,start_freq,end_freq,band_name):    
         print("Plotting band power over time. Frequency range: "+str(start_freq)+" - "+str(end_freq))
-        title = 'Trend Graph of '+band_name+' EEG Amplitude over Time '+self.default_plot_title
         bool_inds = (self.spec_freqs > start_freq) & (self.spec_freqs < end_freq)
         band_power = np.sqrt(np.amax(self.spec_PSDperBin[bool_inds, :], 0))
         plt.figure(figsize=(10,5))    
@@ -222,15 +235,15 @@ class EEGrunt:
         # plt.xlim(len(x)/config['sample_block'])
         plt.xlabel('Time (sec)')
         plt.ylabel('EEG Amplitude (uVrms)')
-        plt.title(title)
-        self.plotit(plt, 'Channel '+str(self.channel)+' trend graph')
+        plt.title(self.plot_title('Trend Graph of '+band_name+' EEG Amplitude over Time'))
+        self.plotit(plt, self.plot_filename(band_name+' EEG Amplitude Over Time'))
 
 
     def plot_coherence_fft(self, s1, s2, chan_a, chan_b):
         plt.figure()
         plt.ylabel("Coherence")
         plt.xlabel("Frequency (Hz)")
-        plt.title("Coherence between channels "+chan_a+" and " +chan_b +" in the "+str(config['band'][0])+"-"+str(config['band'][1])+" Hz band.")
+        plt.title(self.plot_title("Coherence between channels "+chan_a+" and " +chan_b +" in the "+str(config['band'][0])+"-"+str(config['band'][1])+" Hz band"))
         plt.grid(True)
         plt.xlim(config['band'][0],config['band'][1])
         cxy, f = plt.cohere(s1, s2, NFFT, fs_Hz)
