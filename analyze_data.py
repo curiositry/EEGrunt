@@ -12,20 +12,19 @@ source = 'openbci'
 path = 'data/'
 
 # EEG data file name
-filename = 'OpenBCI-RAW-2015-04-23_08-46-58-rf-meditation2.txt'
-#filename = 'EEG_data.csv'
+filename = 'eegrunt-obci-ovibe-test-data.csv'
 
-# Activity label (used in some plots and such)
-activity  = "Meditation"
+# Session title (used in plots and such)
+session_title = "OpenBCI EEGrunt Test Data"
 
 # Initialize
-EEG = EEGrunt.EEGrunt(path, filename, source)
+EEG = EEGrunt.EEGrunt(path, filename, source, session_title)
 
 
 # Here we can set some additional properties
 # The 'plot' property determines whether plots are displayed or saved.
 # Possible values are 'show' and 'save'
-EEG.plot = 'show'
+EEG.plot = 'save'
 
 
 # Load the EEG data
@@ -36,8 +35,6 @@ for channel in EEG.channels:
     
     EEG.load_channel(channel)
 
-    EEG.default_plot_title = "Channel "+str(EEG.channel)+"\n"+str(EEG.source.title())+" data loaded from "+str(EEG.filename)
-    
     print("Processing channel "+ str(EEG.channel))
         
     # Removes OpenBCI DC offset
