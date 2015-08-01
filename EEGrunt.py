@@ -151,9 +151,11 @@ class EEGrunt:
     def plotit(self,plt, filename=""):
         if self.plot == 'show':
             plt.show()
+            plt.close()
         if self.plot == 'save':
             plt.savefig(filename)
-
+            plt.close()
+        
     def signalplot(self,x_values,x_label,y_label,title):
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
