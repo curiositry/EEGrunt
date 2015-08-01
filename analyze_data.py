@@ -20,7 +20,6 @@ session_title = "OpenBCI EEGrunt Test Data"
 # Initialize
 EEG = EEGrunt.EEGrunt(path, filename, source, session_title)
 
-
 # Here we can set some additional properties
 # The 'plot' property determines whether plots are displayed or saved.
 # Possible values are 'show' and 'save'
