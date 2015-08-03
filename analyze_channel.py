@@ -7,16 +7,17 @@ import EEGrunt
 # 'openbci-openvibe' for OBCI data recorded with OpenViBE's csv writer
 # 'muse' for data from Muse headset
 
-source = 'openbci'
+source = 'openbci-openvibe'
 
 # Path to EEG data file
 path = 'data/'
 
 # EEG data file name 
 filename = 'eegrunt-obci-ovibe-test-data.csv'
+#filename = 'eegrunt-obci-raw-test-data.txt'
 
 # Session title (used in some plots and such)
-session_title = "EEGrunt OpenBCI Sample Data"
+session_title = "EEGrunt OpenBCI OpenViBE Sample Data"
 
 # Channel
 channel = 1
@@ -27,7 +28,7 @@ EEG = EEGrunt.EEGrunt(path, filename, source, session_title)
 # Here we can set some additional properties
 # The 'plot' property determines whether plots are displayed or saved.
 # Possible values are 'show' and 'save'
-EEG.plot = 'save'
+EEG.plot = 'show'
 
 
 # Load the EEG data
@@ -42,6 +43,9 @@ EEG.remove_dc_offset()
 
 # Notches 60hz noise (if you're in Europe, switch to 50Hz)
 EEG.notch_mains_interference()
+
+# Make signal plot
+EEG.signalplot()
 
 # Calculates spectrum data and stores as EEGrunt attribute(s) for reuse
 EEG.get_spectrum_data()

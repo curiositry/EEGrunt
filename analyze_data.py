@@ -23,7 +23,7 @@ EEG = EEGrunt.EEGrunt(path, filename, source, session_title)
 # Here we can set some additional properties
 # The 'plot' property determines whether plots are displayed or saved.
 # Possible values are 'show' and 'save'
-EEG.plot = 'save'
+EEG.plot = 'show'
 
 
 # Load the EEG data
@@ -41,6 +41,9 @@ for channel in EEG.channels:
     
     # Notches 60hz noise (if you're in Europe, switch to 50Hz)
     EEG.notch_mains_interference()
+    
+    # Make signal plot
+    EEG.signalplot()
 
     # Crunches spectrum data and stores as EEGrunt attribute(s) for reuse
     EEG.get_spectrum_data()
