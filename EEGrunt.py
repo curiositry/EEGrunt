@@ -156,13 +156,14 @@ class EEGrunt:
             plt.savefig(filename)
             plt.close()
         
-    def signalplot(self,x_values,x_label,y_label,title):
+    def signalplot(self):
+        print("Generating signal plot...")
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
-        plt.plot(x_values,data)
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
-        plt.title("Plot of "+title)
+        plt.plot(self.t_sec,self.data)
+        plt.xlabel('Time (sec)')
+        plt.ylabel('Power (uV)')
+        plt.title(self.plot_title('Signal'))
         self.plotit(plt)
         
     def get_spectrum_data(self):
