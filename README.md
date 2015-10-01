@@ -4,7 +4,7 @@
 
 <br> Working with EEG (electroencephalography) data is hard, and this little library aims to make it easier. EEGrunt consists of a collection of functions for reading EEG data from CSV files, converting and filtering it in various ways, and finally generating pretty and informative visualizations.
 
-EEGrunt is compatible with data from OpenBCI ~~, but could easily be modified for other EEG aquisition hardware. You could always send me another headset and I add support :)~~ and Muse. 
+EEGrunt is compatible with data from OpenBCI ~~, but could easily be modified for other EEG acquisition hardware. You could always send me another headset and I add support :)~~ and Muse. 
 
 EEGrunt has bandpass, notch, and highpass filters for cleaning up powerline interference, OpenBCI's DC offset, and zeroing in on the frequency band you want to analyze.
 
