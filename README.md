@@ -4,7 +4,7 @@
 
 <br> Working with EEG (electroencephalography) data is hard, and this little library aims to make it easier. EEGrunt consists of a collection of functions for reading EEG data from CSV files, converting and filtering it in various ways, and finally generating pretty and informative visualizations.
 
-EEGrunt is compatible with data from OpenBCI ~~, but could easily be modified for other EEG acquisition hardware. You could always send me another headset and I add support :)~~ and Muse. 
+EEGrunt is compatible with data from OpenBCI ~~, but could easily be modified for other EEG acquisition hardware. You could always send me another headset and I add support :)~~ and Muse.
 
 EEGrunt has bandpass, notch, and highpass filters for cleaning up powerline interference, OpenBCI's DC offset, and zeroing in on the frequency band you want to analyze.
 
@@ -18,4 +18,4 @@ EEGrunt makes it easy to generate signal plots, amplitude trend graphs, spectrog
 4. Take a look in `analyze_data.py` and edit at will, or create your own script using `EEGrunt.py`. **Make sure to set the required variables — device, path, and filename.**
 5. Run it: `python analyze_data.py`
 
-[1]: http://www.autodidacts.io/eegrunt-open-source-python-eeg-analysis-and-processing-utilities/
+[1]: http://www.autodidacts.io/eegrunt-open-source-python-eeg-analysis-utilities/
