@@ -298,6 +298,39 @@ class EEGrunt:
         plt.xlim(100, 500)
         self.plotit(plt)
 
+        heartRateArray = []
+
+        for val in rrIntervalsArray:
+            # This is probably a heart-beat
+            if val > 0.1905:
+                heartRate = 60.0 / val
+
+            # if RR-interval < .1905 seconds, heart-rate > highest recorded value, 315 BPM. Probably an error!
+            elif val > 0 and val < 0.1905:
+                # So we'll use the mean heart-rate from the data so far:
+                if len(heartRateArray) > 0:
+                    heartRate = np.mean(heartRateArray)
+                else:
+                    heartRate = 60.0
+            # Get around divide by 0 error
+            else:
+                heartRate = 0.0
+            # Append the heart-rate
+            heartRateArray.append(heartRate)
+
+        # Get the average heart-rate over the session (for the plot title)
+        avgHeartRate = np.mean(heartRateArray)
+
+        plt.figure(figsize=(10,5))
+        plt.subplot(1,1,1)
+        plt.plot(self.t_sec, heartRateArray)
+        plt.xlabel('Time (sec)')
+        plt.ylabel('Heart-rate (BPM)')
+        plt.title(self.plot_title('ECG Signal. Average heart-rate: ' + str(int(avgHeartRate)) + " BPM"))
+        plt.ylim(-1, 200)
+        # plt.xlim(100, 500)
+        self.plotit(plt)
+
     def plot_coherence_fft(self, s1, s2, chan_a, chan_b):
         plt.figure()
         plt.ylabel("Coherence")
