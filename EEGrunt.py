@@ -97,6 +97,22 @@ class EEGrunt:
         self.channel = channel
         self.data = channel_data
 
+    def trim_data(self, start, end):
+        # Trim data off the beginning and end to get rid of unwanted
+        # artifacts (such as EMG from applying and removing electrodes).
+        #
+        # Arguments 'start' and 'end' are how many seconds to trim
+        # from the start and end of the data.
+        #
+        # Note: this must be applied to a single channel,
+        # not to data that has multiple channels. For best results, run it
+        # after EEG.notch_mains_interference().
+
+        trim_start_samples = int(start * self.fs_Hz)
+        trim_end_samples = int(end * self.fs_Hz)
+        self.data = self.data[trim_start_samples:(trim_end_samples*-1):]
+        self.t_sec = self.t_sec[trim_start_samples:(trim_end_samples*-1):]
+
 
     def packet_check(self):
         data_indices = self.data[:, 0]
