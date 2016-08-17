@@ -352,9 +352,9 @@ class EEGrunt:
             print("WARNING! RR-interval was shorter than fastest recorded heart-beat. [" + str(errCount) + " x]")
 
         # Get the average heart-rate over the session (for the plot title)
-        avgHeartRate = np.mean(heartRateArray)
+        self.avgHeartRate = np.mean(heartRateArray)
         # Not sure how accurate this method of getting HRV is ...
-        sessionHRV = np.std(heartRateArray)
+        self.sessionHRV = np.std(heartRateArray)
 
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
@@ -363,8 +363,48 @@ class EEGrunt:
 
         plt.xlabel('Time (sec)')
         plt.ylabel('Heart-rate (BPM)')
-        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(avgHeartRate)) + "\n BPM. Standard deviation of R-R intervals over session (HRV): " + str(sessionHRV)))
+        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avgHeartRate)) + " BPM. \n Standard deviation of R-R intervals over session (HRV): " + str(self.sessionHRV)))
         plt.ylim(-1, 200)
+        self.plotit(plt)
+
+    # Note: This function is a WIP, and may not behave correctly or consistently.
+    # It should be finished and tested shortly; until then, use at own risk.
+    def plot_hrv(self):
+        if hasattr(self, "rrIntervalsArray") == False:
+            self.get_rr_intervals()
+
+        hrvStdArray = []
+        arr = self.rrIntervalsNotIndexedToSamples
+
+        index = 0
+        errCount = 0
+        for val in arr:
+            if index > int(index+(5*self.fs_Hz)) and index < int(len(arr)-(5*self.fs_Hz)):
+                hrvStdValue = np.std(arr[index-(2.5*self.fs_Hz):index+(2.5*self.fs_Hz):])
+                hrvStdArray.append(hrvStdValue)
+            elif index <  int(index+(5*self.fs_Hz)):
+                hrvStdValue = np.std(arr[index:int(index+(5*self.fs_Hz)):])
+                hrvStdArray.append(hrvStdValue)
+            elif index > int(len(arr)-(5*self.fs_Hz)):
+                hrvStdValue = np.std(arr[len(arr)-(5*self.fs_Hz):len(arr):])
+                hrvStdArray.append(hrvStdValue)
+            else:
+                print("ERR")
+            index += 1
+        dt = np.dtype('Float64')
+        hrvStdArray = np.array(hrvStdArray, dtype=dt)
+
+
+        print("HRV array",hrvStdArray)
+        plt.figure(figsize=(10,5))
+        plt.subplot(1,1,1)
+        plt.plot(hrvStdArray*50)
+        plt.subplot(1,1,1)
+        plt.plot(arr)
+
+        plt.xlabel('X-axis label')
+        plt.ylabel('Standard deviation of R-R intervals (over 5-second window)')
+        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avgHeartRate)) + "\n BPM. Standard deviation of R-R intervals over session (HRV): " + str(self.sessionHRV)))
         self.plotit(plt)
 
     def plot_coherence_fft(self, s1, s2, chan_a, chan_b):
