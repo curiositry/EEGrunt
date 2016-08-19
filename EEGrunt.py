@@ -368,8 +368,6 @@ class EEGrunt:
         plt.ylim(-1, 200)
         self.plotit(plt)
 
-    # Note: This function is a WIP, and may not behave correctly or consistently.
-    # It should be finished and tested shortly; until then, use at own risk.
     def plot_hrv(self):
         if hasattr(self, "rrIntervalsArray") == False:
             self.get_rr_intervals()
@@ -415,7 +413,6 @@ class EEGrunt:
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
         plt.plot(hrvStdArray)
-
         # plt.subplot(1,1,1)
         # plt.plot(arr)
 
