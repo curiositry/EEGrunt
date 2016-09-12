@@ -7,17 +7,16 @@ import EEGrunt
 # 'openbci-openvibe' for OBCI data recorded with OpenViBE's csv writer
 # 'muse' for data from Muse headset
 
-source = 'openbci-openvibe'
+source = 'openbci'
 
 # Path to EEG data file
 path = 'data/'
 
-# EEG data file name 
-filename = 'eegrunt-obci-ovibe-test-data.csv'
-#filename = 'eegrunt-obci-raw-test-data.txt'
+# EEG data file name
+filename = 'eegrunt-obci-raw-test-data.csv'
 
 # Session title (used in some plots and such)
-session_title = "EEGrunt OpenBCI OpenViBE Sample Data"
+session_title = "EEGrunt OpenBCI Sample Data"
 
 # Channel
 channel = 1
@@ -30,14 +29,13 @@ EEG = EEGrunt.EEGrunt(path, filename, source, session_title)
 # Possible values are 'show' and 'save'
 EEG.plot = 'show'
 
-
 # Load the EEG data
 EEG.load_data()
 
 EEG.load_channel(channel)
 
 print("Processing channel "+ str(EEG.channel))
-    
+
 # Removes OpenBCI DC offset
 EEG.remove_dc_offset()
 
@@ -50,11 +48,11 @@ EEG.signalplot()
 # Calculates spectrum data and stores as EEGrunt attribute(s) for reuse
 EEG.get_spectrum_data()
 
-# Returns bandpassed data 
+# Returns bandpassed data
 # (uses scipy.signal butterworth filter)
-# EEG.data = EEG.bandpass(start,stop)
+EEG.data = EEG.bandpass(start,stop)
 
-# Make Spectrogram 
+# Make Spectrogram
 EEG.spectrogram()
 
 # Line graph of amplitude over time for a given frequency range.
@@ -63,8 +61,10 @@ EEG.plot_band_power(8,12,"Alpha")
 
 # Power spectrum plot
 EEG.plot_spectrum_avg_fft()
-    
+
 # Plot coherence fft (not tested recently...)
 # s1 = bandpass(seginfo["data"][:,1-1], config['band'])
 # s2 = bandpass(seginfo["data"][:,8-1], config['band'])
 # plot_coherence_fft(s1,s2,"1","8")
+
+EEG.showplots()
