@@ -38,6 +38,9 @@ class EEGrunt:
 
         self.overlap  = self.NFFT - int(0.25 * self.fs_Hz)
 
+        self.ecg_threshold_factor = 6
+        self.hrvWindowLength = 10
+
 
 
 
@@ -273,7 +276,7 @@ class EEGrunt:
         self.signalDiff = np.append(self.signalDiff,0) # Cheap way to get shape to match...
 
         absDiff = np.sqrt(self.signalDiff**2)
-        threshold = np.average(absDiff)*5
+        threshold = np.average(absDiff)*self.ecg_threshold_factor
 
         print("Threshold: " + str(threshold))
 
@@ -373,7 +376,7 @@ class EEGrunt:
             self.get_rr_intervals()
 
         hrvStdArray = []
-        index = 0
+        index = 1
         errCount = 0
         chunk = []
 
@@ -387,7 +390,7 @@ class EEGrunt:
 
         # Non-time-indexed unpadded RR data
         arr = self.rrIntervalsNotIndexedToSamples
-        windowLength = 10
+        windowLength = self.hrvWindowLength
         windowLengthSamples = int(windowLength*(self.avgHeartRate/60))
         xLabel = "Heart beats"
 
@@ -409,7 +412,7 @@ class EEGrunt:
         dt = np.dtype('Float64')
         hrvStdArray = np.array(hrvStdArray, dtype=dt)
 
-        # print("HRV array",hrvStdArray)
+        print("HRV array",hrvStdArray)
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
         plt.plot(hrvStdArray)
