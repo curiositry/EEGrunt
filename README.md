@@ -6,7 +6,7 @@
 
 ![EEGrunt Logo](http://cdn.autodidacts.io/img/autodidacts/EEGrunt/EEGrunt-post-image.png)
 
-1. EEGrunt is compatible with data from OpenBCI <!-- ~~, but could easily be modified for other EEG acquisition hardware. You could always send me another headset and I add support :)~~ --> and Muse.
+1. EEGrunt is compatible with data from OpenBCI and Muse.
 
 2. EEGrunt has bandpass, notch, and highpass filters for cleaning up powerline interference, OpenBCI's DC offset, and zeroing in on the frequency band you want to analyze.
 
