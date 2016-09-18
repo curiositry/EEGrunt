@@ -39,7 +39,7 @@ class EEGrunt:
         self.overlap  = self.NFFT - int(0.25 * self.fs_Hz)
 
         self.ecg_threshold_factor = 6
-        self.hrvWindowLength = 10
+        self.hrv_window_length = 10
 
 
 
@@ -272,36 +272,36 @@ class EEGrunt:
         sig1 = self.smooth(sig1,10)
         sig1 = sig1[0:-18:] # Smoothing makes the signal longer, so we need to chop it off
 
-        self.signalDiff = np.diff(sig1)
-        self.signalDiff = np.append(self.signalDiff,0) # Cheap way to get shape to match...
+        self.signal_diff = np.diff(sig1)
+        self.signal_diff = np.append(self.signal_diff,0) # Cheap way to get shape to match...
 
-        absDiff = np.sqrt(self.signalDiff**2)
-        threshold = np.average(absDiff)*self.ecg_threshold_factor
+        abs_diff = np.sqrt(self.signal_diff**2)
+        threshold = np.average(abs_diff)*self.ecg_threshold_factor
 
         print("Threshold: " + str(threshold))
 
         count = 0
-        lastVal = .0
-        currentRr = .0
+        last_val = .0
+        current_rr = .0
         # This array gets a value added for every sample, so can be plotted in the time domain
-        self.rrIntervalsArray = []
+        self.rr_intervals_array = []
         # This array is just RR values, useful for statistical purposes
-        self.rrIntervalsNotIndexedToSamples = []
+        self.rr_intervals_not_indexed_to_samples = []
 
-        for val in self.signalDiff:
+        for val in self.signal_diff:
             count = count + 1
 
-            if (val > threshold and lastVal < threshold):
-                currentRr = (count/self.fs_Hz)
-                self.rrIntervalsNotIndexedToSamples.append(count)
+            if (val > threshold and last_val < threshold):
+                current_rr = (count/self.fs_Hz)
+                self.rr_intervals_not_indexed_to_samples.append(count)
                 count = 0
-            lastVal = val
-            self.rrIntervalsArray.append(currentRr)
+            last_val = val
+            self.rr_intervals_array.append(current_rr)
 
         self.data = sig1
 
     def plot_rr_intervals(self):
-        if hasattr(self, "rrIntervalsArray") == False:
+        if hasattr(self, "rr_intervals_array") == False:
             self.get_rr_intervals()
 
         print("Plotting ECG signal + R-R intervals...")
@@ -310,9 +310,9 @@ class EEGrunt:
         plt.subplot(1,1,1)
         plt.plot(self.t_sec,self.data/300)
         plt.subplot(1,1,1)
-        plt.plot(self.t_sec,self.signalDiff/300)
+        plt.plot(self.t_sec,self.signal_diff/300)
         plt.subplot(1,1,1)
-        plt.plot(self.t_sec,self.rrIntervalsArray)
+        plt.plot(self.t_sec,self.rr_intervals_array)
         plt.xlabel('Time (sec)')
         plt.ylabel('RR Interval (sec)')
         plt.title(self.plot_title('ECG Signal'))
@@ -321,107 +321,108 @@ class EEGrunt:
         self.plotit(plt)
 
     def plot_heart_rate(self):
-        if hasattr(self, "rrIntervalsArray") == False:
+        if hasattr(self, "rr_intervals_array") == False:
             self.get_rr_intervals()
 
-        heartRateArray = []
+        heart_rate_array = []
 
-        errCount = 0
-        for val in self.rrIntervalsArray:
+        err_count = 0
+        for val in self.rr_intervals_array:
             # This is probably a heart-beat
             if val > 0.1905:
-                heartRate = 60.0 / val
+                heart_rate = 60.0 / val
 
             # if RR-interval < .1905 seconds, heart-rate > highest recorded value, 315 BPM. Probably an error!
             elif val > 0 and val < 0.1905:
                 # So we'll warn the user that the data seems to have issues
 
-                errCount += 1
+                err_count += 1
 
                 # ... and use the mean heart-rate from the data so far:
-                if len(heartRateArray) > 0:
-                    heartRate = np.mean(heartRateArray)
+                if len(heart_rate_array) > 0:
+                    heart_rate = np.mean(heart_rate_array)
                 else:
-                    heartRate = 60.0
+                    heart_rate = 60.0
             # Get around divide by 0 error
             else:
-                heartRate = 0.0
+                heart_rate = 0.0
 
             # Append the heart-rate
-            heartRateArray.append(heartRate)
+            heart_rate_array.append(heart_rate)
 
 
-        if errCount > 0:
-            print("WARNING! RR-interval was shorter than fastest recorded heart-beat. [" + str(errCount) + " x]")
+        if err_count > 0:
+            print("WARNING! RR-interval was shorter than fastest recorded heart-beat. [" + str(err_count) + " x]")
 
         # Get the average heart-rate over the session (for the plot title)
-        self.avgHeartRate = np.mean(heartRateArray)
-
-        # Not sure how accurate this method of getting HRV is ...
-        self.sessionHRV = np.std(self.rrIntervalsNotIndexedToSamples)
+        self.avg_heart_rate = np.mean(heart_rate_array)
 
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
-        plt.plot(self.t_sec, heartRateArray)
+        plt.plot(self.t_sec, heart_rate_array)
         plt.subplot(1,1,1)
 
         plt.xlabel('Time (sec)')
         plt.ylabel('Heart-rate (BPM)')
-        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avgHeartRate)) + " BPM. \n Standard deviation of R-R intervals over session (HRV): " + str(self.sessionHRV)))
+        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avg_heart_rate)) + " BPM."))
         plt.ylim(-1, 200)
         self.plotit(plt)
 
     def plot_hrv(self):
-        if hasattr(self, "rrIntervalsArray") == False:
+        if hasattr(self, "rr_intervals_array") == False:
             self.get_rr_intervals()
 
-        hrvStdArray = []
+        hrv_std_array = []
         index = 1
-        errCount = 0
+        err_count = 0
         chunk = []
 
         # For using time indexed, padded RR data
         '''
-        arr = self.rrIntervalsArray
-        windowLength = 20
-        windowLengthSamples = int(windowLength*self.fs_Hz)
-        xLabel = "Samples"
+        arr = self.rr_intervals_array
+        window_length = 20
+        window_length_samples = int(window_length*self.fs_Hz)
+        x_label = "Samples"
         '''
 
         # Non-time-indexed unpadded RR data
-        arr = self.rrIntervalsNotIndexedToSamples
-        windowLength = self.hrvWindowLength
-        windowLengthSamples = int(windowLength*(self.avgHeartRate/60))
-        xLabel = "Heart beats"
+        arr = self.rr_intervals_not_indexed_to_samples
+        window_length = self.hrv_window_length
+        window_length_samples = int(window_length*(self.avg_heart_rate/60))
+        x_label = "Heart beats"
 
         print("Data length (samples):",len(arr))
-        print("Window length (samples):",windowLengthSamples)
+        print("Window length (samples):",window_length_samples)
 
         for val in arr:
-            if index < int(windowLengthSamples):
+            if index < int(window_length_samples):
                 chunk = arr[:index:]
             else:
-                chunk = arr[(index-windowLengthSamples):index:]
+                chunk = arr[(index-window_length_samples):index:]
 
             # print(chunk,index)
 
-            hrvStdValue = np.std(chunk)
-            hrvStdArray.append(hrvStdValue)
+            hrv_std_value = np.std(chunk)
+            hrv_std_array.append(hrv_std_value)
             index += 1
 
         dt = np.dtype('Float64')
-        hrvStdArray = np.array(hrvStdArray, dtype=dt)
+        hrv_std_array = np.array(hrv_std_array, dtype=dt)
 
-        print("HRV array",hrvStdArray)
+        # Not sure how accurate this method of getting HRV is ...
+        self.session_hrv = np.std(self.rr_intervals_not_indexed_to_samples)
+
+
+        print("HRV array",hrv_std_array)
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
-        plt.plot(hrvStdArray)
+        plt.plot(hrv_std_array)
         # plt.subplot(1,1,1)
         # plt.plot(arr)
 
-        plt.xlabel(xLabel)
+        plt.xlabel(x_label)
         plt.ylabel('Standard deviation of R-R intervals (over 5s window)')
-        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avgHeartRate)) + "\n BPM. Standard deviation of R-R intervals over session (HRV): " + str(self.sessionHRV)))
+        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avg_heart_rate)) + "\n BPM. Standard deviation of R-R intervals over session (HRV): " + str(self.session_hrv)))
         self.plotit(plt)
 
     def plot_coherence_fft(self, s1, s2, chan_a, chan_b):
