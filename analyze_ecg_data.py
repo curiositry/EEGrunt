@@ -46,6 +46,8 @@ for channel in EEG.channels:
     EEG.signalplot()
 
     # Plot some ECG
+    EEG.hrv_window_length = 60
+
     EEG.plot_rr_intervals()
     EEG.plot_heart_rate()
     EEG.plot_hrv()

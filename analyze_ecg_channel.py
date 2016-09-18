@@ -47,7 +47,7 @@ EEG.notch_mains_interference()
 EEG.plot_rr_intervals()
 EEG.plot_heart_rate()
 
-EEG.hrvWindowLength = 60
+EEG.hrv_window_length = 60
 
 EEG.plot_hrv()
 
