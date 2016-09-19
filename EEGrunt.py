@@ -92,6 +92,9 @@ class EEGrunt:
 
         self.t_sec = np.arange(len(self.raw_data[:, 0])) /self.fs_Hz
 
+        print "Session length (seconds): "+str(len(self.t_sec)/self.fs_Hz)
+        print "t_sec last: "+str(self.t_sec[:-1])
+
 
 
     def load_channel(self,channel):
@@ -102,7 +105,7 @@ class EEGrunt:
 
     def trim_data(self, start, end):
         # Trim data off the beginning and end to get rid of unwanted
-        # artifacts (such as EMG from applying and removing electrodes).
+        # artifacts (such as from applying and removing electrodes).
         #
         # Arguments 'start' and 'end' are how many seconds to trim
         # from the start and end of the data.
@@ -112,9 +115,13 @@ class EEGrunt:
         # after EEG.notch_mains_interference().
 
         trim_start_samples = int(start * self.fs_Hz)
-        trim_end_samples = int(end * self.fs_Hz)
-        self.data = self.data[trim_start_samples:(trim_end_samples*-1):]
-        self.t_sec = self.t_sec[trim_start_samples:(trim_end_samples*-1):]
+        trim_end_samples = int(end * self.fs_Hz)*-1
+
+        if(trim_end_samples == 0):
+            trim_end_samples = len(self.data)
+
+        self.data = self.data[trim_start_samples:trim_end_samples]
+        self.t_sec = self.t_sec[trim_start_samples:trim_end_samples]
 
 
     def packet_check(self):
@@ -148,15 +155,16 @@ class EEGrunt:
         print("Bandpass filtering to: " + str(bp_Hz[0]) + "-" + str(bp_Hz[1]) + " Hz")
         return signal.lfilter(b, a, self.data, 0)
 
+    # Convenient smoothing function from SciPy cookbook: http://scipy-cookbook.readthedocs.io/items/SignalSmooth.html
     def smooth(self,x,window_len=11,window='hanning'):
         if x.ndim != 1:
-            raise ValueError, "smooth only accepts 1 dimension arrays."
+            raise ValueError, "Smooth only accepts 1 dimension arrays."
         if x.size < window_len:
             raise ValueError, "Input vector needs to be bigger than window size."
         if window_len<3:
             return x
         if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-            raise ValueError, "Window is one of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+            raise ValueError, "Invalid window type in smooth(). Must be one of 'flat', 'hanning', 'hamming', 'bartlett', or 'blackman'"
         s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
         if window == 'flat': #moving average
             w=np.ones(window_len,'d')
@@ -267,18 +275,19 @@ class EEGrunt:
 
         print("Smoothing data...")
 
-        sig1 = self.smooth(sig1,10)
+        sig1 = self.smooth(sig1)
         # Lather, rinse, repeat
-        sig1 = self.smooth(sig1,10)
-        sig1 = sig1[0:-18:] # Smoothing makes the signal longer, so we need to chop it off
+        sig1 = self.smooth(sig1)
+
+        sig1 = sig1[10:-10] # Smoothing makes the signal longer, so we need to chop it off
 
         self.signal_diff = np.diff(sig1)
         self.signal_diff = np.append(self.signal_diff,0) # Cheap way to get shape to match...
 
         abs_diff = np.sqrt(self.signal_diff**2)
-        threshold = np.average(abs_diff)*self.ecg_threshold_factor
+        self.ecg_threshold = np.average(abs_diff)*self.ecg_threshold_factor
 
-        print("Threshold: " + str(threshold))
+        print("Threshold: " + str(self.ecg_threshold))
 
         count = 0
         last_val = .0
@@ -291,7 +300,7 @@ class EEGrunt:
         for val in self.signal_diff:
             count = count + 1
 
-            if (val > threshold and last_val < threshold):
+            if (val > self.ecg_threshold and last_val < self.ecg_threshold):
                 current_rr = (count/self.fs_Hz)
                 self.rr_intervals_not_indexed_to_samples.append(count)
                 count = 0
@@ -306,18 +315,27 @@ class EEGrunt:
 
         print("Plotting ECG signal + R-R intervals...")
 
-        plt.figure(figsize=(10,5))
-        plt.subplot(1,1,1)
-        plt.plot(self.t_sec,self.data/300)
-        plt.subplot(1,1,1)
-        plt.plot(self.t_sec,self.signal_diff/300)
-        plt.subplot(1,1,1)
-        plt.plot(self.t_sec,self.rr_intervals_array)
-        plt.xlabel('Time (sec)')
-        plt.ylabel('RR Interval (sec)')
-        plt.title(self.plot_title('ECG Signal'))
-        plt.ylim(-1, 2)
+        #plt.figure(figsize=(10,5))
 
+        fig, ax1 = plt.subplots()
+
+        ax1.plot(self.t_sec,self.data, label='Smoothed ECG signal')
+        ax1.plot(self.t_sec,self.signal_diff, label='Signal diff')
+        ax1.plot(self.t_sec,self.data*0+self.ecg_threshold, 'orange', label='Threshold')
+
+        ax1.set_ylabel("Signal power (uV)")
+        ax1.legend(loc=3)
+
+        ax2 = ax1.twinx()
+        ax2.plot(self.t_sec,self.rr_intervals_array,'r',label='RR intervals')
+        ax2.set_ylabel("RR intervals (seconds)")
+
+        ax2.legend(loc=4)
+
+        plt.xlabel('Time (sec)')
+        plt.title(self.plot_title('ECG signal processing steps'))
+
+        plt.autoscale(True,'both',True)
         self.plotit(plt)
 
     def plot_heart_rate(self):
@@ -354,7 +372,7 @@ class EEGrunt:
         if err_count > 0:
             print("WARNING! RR-interval was shorter than fastest recorded heart-beat. [" + str(err_count) + " x]")
 
-        # Get the average heart-rate over the session (for the plot title)
+        # Get the average heart rate over the session (for the plot title)
         self.avg_heart_rate = np.mean(heart_rate_array)
 
         plt.figure(figsize=(10,5))
@@ -365,7 +383,8 @@ class EEGrunt:
         plt.xlabel('Time (sec)')
         plt.ylabel('Heart-rate (BPM)')
         plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avg_heart_rate)) + " BPM."))
-        plt.ylim(-1, 200)
+        #plt.ylim(-1, 200)
+        plt.autoscale(True,'both',True)
         self.plotit(plt)
 
     def plot_hrv(self):
@@ -391,16 +410,14 @@ class EEGrunt:
         window_length_samples = int(window_length*(self.avg_heart_rate/60))
         x_label = "Heart beats"
 
-        print("Data length (samples):",len(arr))
-        print("Window length (samples):",window_length_samples)
+        print("Data length (samples):"+str(len(arr)))
+        print("Window length (samples):"+str(window_length_samples))
 
         for val in arr:
             if index < int(window_length_samples):
                 chunk = arr[:index:]
             else:
                 chunk = arr[(index-window_length_samples):index:]
-
-            # print(chunk,index)
 
             hrv_std_value = np.std(chunk)
             hrv_std_array.append(hrv_std_value)
@@ -409,20 +426,17 @@ class EEGrunt:
         dt = np.dtype('Float64')
         hrv_std_array = np.array(hrv_std_array, dtype=dt)
 
-        # Not sure how accurate this method of getting HRV is ...
+
         self.session_hrv = np.std(self.rr_intervals_not_indexed_to_samples)
 
-
-        print("HRV array",hrv_std_array)
         plt.figure(figsize=(10,5))
         plt.subplot(1,1,1)
         plt.plot(hrv_std_array)
-        # plt.subplot(1,1,1)
-        # plt.plot(arr)
 
         plt.xlabel(x_label)
-        plt.ylabel('Standard deviation of R-R intervals (over 5s window)')
-        plt.title(self.plot_title('ECG Signal. \n Avg heart-rate: ' + str(int(self.avg_heart_rate)) + "\n BPM. Standard deviation of R-R intervals over session (HRV): " + str(self.session_hrv)))
+        plt.ylabel('Standard deviation of R-R intervals (over '+str(self.hrv_window_length)+'s window)')
+        plt.title(self.plot_title('ECG Signal. \n  Standard deviation of R-R intervals over session (HRV): ' + str(self.session_hrv)))
+        plt.autoscale(True,'both',True)
         self.plotit(plt)
 
     def plot_coherence_fft(self, s1, s2, chan_a, chan_b):
