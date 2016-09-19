@@ -2,9 +2,10 @@
 
 ### [READ THE ANNOUNCEMENT POST &raquo;][1]
 
-<br> Working with EEG (electroencephalography) data is hard, and this little library aims to make it easier. EEGrunt consists of a collection of functions for reading EEG data from CSV files, converting and filtering it in various ways, and finally generating pretty and informative visualizations.
+Working with EEG (electroencephalography) data is hard, and this little library aims to make it easier. EEGrunt consists of a collection of functions for reading EEG data from CSV files, converting and filtering it in various ways, and finally generating pretty and informative visualizations.
 
-![EEGrunt Logo](http://cdn.autodidacts.io/img/autodidacts/EEGrunt/EEGrunt-post-image.png)
+
+## Features
 
 1. EEGrunt is compatible with data from OpenBCI and Muse.
 
@@ -12,7 +13,9 @@
 
 3. EEGrunt makes it easy to generate signal plots, amplitude trend graphs, spectrograms, and FFT (fast-fouier transform) graphs, etc.
 
+
 ## Getting Started
+
 1. Download or clone the repo: `git clone https://github.com/curiositry/EEGrunt`
 2. Run `sudo bash install_linux_dependencies.sh` (tell me if this doesn’t work)
 3. Take a look in `analyze_data.py` and edit at will, or create your own script using `EEGrunt.py`. **Make sure to set the required variables — device, path, and filename.**
