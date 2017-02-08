@@ -61,6 +61,7 @@ class EEGrunt:
 
         if source == 'muse':
             skiprows = 0
+            raw_data = []
             with open(path + filename, 'rb') as csvfile:
                 for row in csvfile:
                     cols = row.split(',')
