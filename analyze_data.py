@@ -51,7 +51,9 @@ for channel in EEG.channels:
 
     # Returns bandpassed data
     # (uses scipy.signal butterworth filter)
-    # EEG.data = EEG.bandpass(8,12)
+    start_Hz = 1
+    stop_Hz = 50
+    EEG.data = EEG.bandpass(start_Hz,stop_Hz)
 
     # Make Spectrogram
     EEG.spectrogram()
