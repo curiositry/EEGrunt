@@ -3,9 +3,12 @@ import EEGrunt
 # Required settings
 
 # Data source. Options:
-# 'openbci' for data recorded with OBCI GUI;
-# 'openbci-openvibe' for OBCI data recorded with OpenViBE's csv writer
-# 'muse' for data from Muse headset
+# 'muse' for data from Muse headsets.
+# 'openbci' for OpenBCI Cyton data recorded with the OpenBCI GUI;
+# 'openbci-ganglion' for OpenBCI Ganglion data recorded with the OpenBCI GUI;
+# 'openbci-openvibe' for Cyton data recorded with OpenViBE's csv writer
+# 'openbci-ganglion-openvibe' for Ganglion data recorded with OpenViBE's csv writer
+
 source = 'openbci'
 
 # Path to EEG data file
