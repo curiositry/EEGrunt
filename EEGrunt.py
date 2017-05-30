@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,13 +17,6 @@ class EEGrunt:
         else:
             self.session_title = source.title()+" data loaded from "+filename
 
-        if self.source == 'openbci' or self.source == 'openbci-openvibe':
-            self.fs_Hz = 250.0
-            self.NFFT = 256*2
-            self.nchannels = 8
-            self.channels = [1,2,3,4,5,6,7,8]
-            self.col_offset = 0
-
 
         if self.source == 'muse':
             self.fs_Hz = 220.0
@@ -31,10 +25,22 @@ class EEGrunt:
             self.channels = [1,2,3,4]
             self.col_offset = -1
 
+        else: # If it isn't Muse data, it's OpenBCI data.
+            self.NFFT = 256*2
+            self.col_offset = 0
+            if self.source == 'openbci-ganglion' or self.source == 'openbci-ganglion-openvibe':
+                self.fs_Hz = 200.0
+                self.nchannels = 4
+                self.channels = [1,2,3,4]
+            else:
+                self.fs_Hz = 250.0
+                self.nchannels = 8
+                self.channels = [1,2,3,4,5,6,7,8]
+
 
         self.sample_block = 11
 
-        self.plot = 'show'
+        self.plot = 'save'
 
         self.overlap  = self.NFFT - int(0.25 * self.fs_Hz)
 
@@ -70,21 +76,23 @@ class EEGrunt:
             dt = np.dtype('Float64')
             raw_data = np.array(raw_data, dtype=dt)
 
-        if source == 'openbci':
-            skiprows = 5
+        else:
+
+            if source == 'openbci' or source == 'openbci-openvibe':
+                skiprows = 5
+                cols = (0,1,2,3,4,5,6,7,8)
+
+            if source == 'openbci-ganglion' or source =='openbci-ganglion-openvibe':
+                skiprows = 6
+                cols = (0,1,2,3,4)
+
+            if source == 'openbci-openvibe' or source == 'openbci-ganglion-openvibe':
+                skiprows = 1
+
             raw_data = np.loadtxt(path + filename,
                           delimiter=',',
                           skiprows=skiprows,
-                          usecols=(0,1,2,3,4,5,6,7,8)
-                          )
-
-
-        if source == 'openbci-openvibe':
-            skiprows = 1
-            raw_data = np.loadtxt(path + filename,
-                          delimiter=',',
-                          skiprows=skiprows,
-                          usecols=(0,1,2,3,4,5,6,7,8)
+                          usecols=cols
                           )
 
 
