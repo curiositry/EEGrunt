@@ -4,6 +4,7 @@ import EEGrunt
 
 # Data source. Options:
 # 'muse' for data from Muse headsets.
+# 'muse-lsl' for data from Muse headsets recorded with Lab Streaming Layer.
 # 'openbci' for OpenBCI Cyton data recorded with the OpenBCI GUI;
 # 'openbci-ganglion' for OpenBCI Ganglion data recorded with the OpenBCI GUI;
 # 'openbci-openvibe' for Cyton data recorded with OpenViBE's csv writer
