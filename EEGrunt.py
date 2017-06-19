@@ -18,15 +18,14 @@ class EEGrunt:
             self.session_title = source.title()+" data loaded from "+filename
 
 
-        if self.source == 'muse':
+        if self.source == 'muse' or self.source == 'muse-lsl':
             self.fs_Hz = 220.0
-            self.NFFT = 220*2
             self.nchannels = 4
             self.channels = [1,2,3,4]
             self.col_offset = -1
 
         else: # If it isn't Muse data, it's OpenBCI data.
-            self.NFFT = 256*2
+
             self.col_offset = 0
             if self.source == 'openbci-ganglion' or self.source == 'openbci-ganglion-openvibe':
                 self.fs_Hz = 200.0
@@ -37,6 +36,7 @@ class EEGrunt:
                 self.nchannels = 8
                 self.channels = [1,2,3,4,5,6,7,8]
 
+        self.NFFT = 512
 
         self.sample_block = 11
 
@@ -89,6 +89,10 @@ class EEGrunt:
 
             if source == 'openbci-openvibe' or source == 'openbci-ganglion-openvibe':
                 skiprows = 1
+
+            if source == 'muse-lsl':
+                skiprows = 1
+                cols = (0,1,2,3,4)
 
             raw_data = np.loadtxt(path + filename,
                           delimiter=',',
